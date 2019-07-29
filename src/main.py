@@ -8,13 +8,10 @@ from discord.ext.commands import Bot, Context
 from discord import Embed
 
 # local imports
-from imports import sql
 from imports.utils import Utils, vipId
 
 config = json.load(open("config/config.json"))
 twitch = json.load(open("config/twitch.json"))
-# settings = sql.create_connection("../config/settings.db")
-# c = settings.cursor()
 
 
 __version__ = config["meta"]["version"][1:]
@@ -41,10 +38,6 @@ welcomeChannel: discord.TextChannel
 streamerChannel: discord.TextChannel
 
 newline = "\n\t- "
-
-# Create table
-# c.execute('''CREATE TABLE IF NOT EXISTS USERS
-#              (USERNAME text, DISCRIMINATOR integer, ID integer, LEVEL integer)''')
 
 
 @bot.event
@@ -247,31 +240,20 @@ async def _dev(ctx, _user: discord.Member = None):
 
 
 @bot.command()
-async def reload(ctx, _config:str = str()):
+async def reload(ctx):
     await ctx.message.delete()
     if not u.dev(ctx.author):
         msg = await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
         await sleep(3)
         await msg.delete()
         return
-    if _config.lower() == "config" or _config.lower() == "c":
-        global config
-        config = u.reloadConfig()
-        msg = await ctx.send(f"{ctx.author.mention}, reloaded config!")
-        await sleep(1)
-        await msg.delete()
-        return
-    else:
-        global settings
-        settings.commit()
-        settings.close()
-        # settings = sql.create_connection("/config/settings.db")
-        # global c
-        # c = settings.cursor()
-        msg = await ctx.send(f"{ctx.author.mention}, reloaded settings database!")
-        await sleep(1)
-        await msg.delete()
-        return
+
+    global config
+    config = u.reloadConfig()
+    msg = await ctx.send(f"{ctx.author.mention}, reloaded config!")
+    await sleep(1)
+    await msg.delete()
+    return
 
 @bot.command()
 async def stop(ctx):
@@ -285,13 +267,9 @@ async def stop(ctx):
     await sleep(1)
     await msg.delete()
     await bot.logout()
-    # settings.commit()
-    # settings.close()
     exit(1)
 
 
 if __name__ == "__main__":
     bot.loop.create_task(background_loop())
     bot.run(config["secrets"]["token"])
-    # settings.commit()
-    # settings.close()
