@@ -1,5 +1,8 @@
-import discord
+import time
 import json
+import discord
+
+from termcolor import cprint
 
 vipId = 601711869668884484
 streamerId = 601710639068610578
@@ -9,6 +12,9 @@ class Utils:
     Utilities class
     """
     config:dict = {}
+    LOG = 1
+    WRN = 2
+    ERR = 3
 
     def __init__(self, _config):
         """Utils(config)"""
@@ -45,3 +51,12 @@ class Utils:
             f.write(_json)
             f.close()
         return json.load(open(fp))
+
+    def log(self, msg, lvl = LOG):
+        logString = f"{time.strftime('%H:%M:%S')}: {msg}"
+        if lvl == self.LOG:
+            print("[LOG] " + logString)
+        elif lvl == self.WRN:
+            cprint("[WRN] " + logString, color="yellow")
+        elif lvl == self.ERR:
+            cprint("[ERR] " + logString, color="red")

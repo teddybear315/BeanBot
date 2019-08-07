@@ -1,0 +1,17 @@
+{
+    "bot": {
+        "prefix": "b!",
+        "description": "Bean Gang is life"
+    },
+    "devs": [
+        324332386219327488,
+        189850839660101632
+    ],
+    "meta": {
+        "version": "1.1.1",
+        "changelog": [
+            "Put secrets into their own config file",
+            "Fixed program ignoring new version check"
+        ]
+    }
+}

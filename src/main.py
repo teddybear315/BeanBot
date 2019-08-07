@@ -1,8 +1,8 @@
+import time
 import json
 import discord
 import requests
 
-from sys import argv
 from asyncio import sleep
 from discord.ext.commands import Bot, Context
 from discord import Embed
@@ -12,16 +12,19 @@ from imports.utils import Utils, vipId
 
 config = json.load(open("config/config.json"))
 twitch = json.load(open("config/twitch.json"))
+secrets = json.load(open("config/secrets.json"))
 
-
-__version__ = config["meta"]["version"][1:]
+__version__ = config["meta"]["version"]
+__name__ = "Bean Bot"
+__package__ = "Main"
+__authors__ = ["Yung Granny#7728", "Luke#1000"]
 
 bot = Bot(command_prefix=config["bot"]["prefix"],
           case_insensitive=True,
           description=config["bot"]["description"],
           owner_ids=config["devs"],
           activity=discord.Activity(type=discord.ActivityType.playing, name="games with the Bean Gang.")
-    )
+)
 
 u = Utils(config)
 
@@ -36,19 +39,21 @@ beansRole: discord.Role
 changelogChannel: discord.TextChannel
 welcomeChannel: discord.TextChannel
 streamerChannel: discord.TextChannel
+suggestionChannel: discord.TextChannel
 
 newline = "\n\t- "
-
 
 @bot.event
 async def on_ready():
     global guild
+    global secrets
     global vipRole
-    global streamerRole
     global beansRole
-    global changelogChannel
+    global streamerRole
     global welcomeChannel
     global streamerChannel
+    global changelogChannel
+    global suggestionChannel
 
     guild = bot.get_guild(601701439995117568)
 
@@ -61,14 +66,19 @@ async def on_ready():
     changelogChannel = bot.get_channel(603279565439369236)
     welcomeChannel = bot.get_channel(603284631151706112)
     streamerChannel = bot.get_channel(604088400819126361)
+    suggestionChannel = bot.get_channel(608371806549704800)
 
-    print("BeanBot logged in...")
-    if "--debug" not in argv:
+    u.log("BeanBot logged in...")
+
+    if __version__ != secrets["CACHED_VERSION"]:
         await changelogChannel.send(f"""
-***BeanBot {config['meta']['version']} online!***
+***BeanBot v{__version__} online!***
 Recent Changes:
 \t- {newline.join(config['meta']['changelog'])}
         """)
+        secrets["CACHED_VERSION"] = __version__
+        u.editConfig("secrets.json", secrets)
+        secrets = u.reloadConfig("secrets.json")
 
 
 @bot.event
@@ -83,6 +93,23 @@ async def on_member_remove(user: discord.Member):
     await welcomeChannel.send(f"The bean gang will miss you, {user.display_name}")
     await user.send(f"The bean gang will miss you!", tts=True)
 
+@bot.event
+async def on_message(message: discord.Message):
+    global suggestionChannel
+    
+    if message.channel == suggestionChannel:
+        embed = discord.Embed(title="New Feature Request!", color=0x8000ff)
+        embed.set_author(name=f"{message.author.name}#{message.author.discriminator}",
+                         icon_url=message.author.avatar_url)
+        embed.add_field(name="Request", value=message.content, inline=True)
+        await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.",
+                                  embed=embed)
+        u.log(f"Request from {message.author.name}#{message.author.discriminator} recieved..")
+        for dev in config["devs"]:
+            developer: discord.User = bot.get_user(dev)
+            await developer.send(embed=embed)
+    await bot.process_commands(message)
+
 
 async def background_loop():
     global twitch
@@ -91,35 +118,41 @@ async def background_loop():
     global streamerChannel
     await sleep(10)
     await bot.wait_until_ready()
+
     while not bot.is_closed():
+        u.log("Checking...")
         for streamer in twitch["channels"]:
             r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={streamer}",
-                             headers={"Client-ID": config["secrets"]["twitchToken"]})
-
+                             headers={"Client-ID": secrets["twitchToken"]})
             streamData = r.json()
-            print(streamData)
+            r.close()
 
             if streamData["data"]:
-                streamData = r.json()["data"]
-                r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData[0]['user_id']}",
-                                 headers={"Client-ID": config["secrets"]["twitchToken"]})
+                streamData = r.json()["data"][0]
+                print(streamData)
+                r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}",
+                                 headers={"Client-ID": secrets["twitchToken"]})
                 userData = r.json()["data"]
-                r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData[0]['game_id']}",
-                                 headers={"Client-ID": config["secrets"]["twitchToken"]})
-                gameData = r.json()["data"]
+                r.close()
 
-                embed = discord.Embed(title=streamData[0]["title"], url=f"https://twitch.tv/{streamer}",
+                r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}",
+                                 headers={"Client-ID": secrets["twitchToken"]})
+                gameData = r.json()["data"]
+                r.close()
+
+                embed = discord.Embed(title=streamData["title"], url=f"https://twitch.tv/{streamer}",
                                       color=0x8000ff)
                 embed.set_author(name=f"{streamer}",
                                  icon_url=userData[0]["profile_image_url"].format(width=500, height=500))
                 embed.set_thumbnail(url=gameData[0]["box_art_url"].format(width=390, height=519))
-                embed.set_image(url=streamData[0]["thumbnail_url"].format(width=1280, height=720))
+                embed.set_image(url=streamData["thumbnail_url"].format(width=1280, height=720))
                 embed.add_field(name="Game", value=gameData[0]["name"], inline=True)
-                embed.add_field(name="Viewers", value=streamData[0]["viewer_count"], inline=True)
+                embed.add_field(name="Viewers", value=streamData["viewer_count"], inline=True)
                 if streamer not in twitch["messages"]:
+                    print(f"{streamer} is live... | {time.strftime('%H:%M:%S %A %B %d, %Y')}")
                     msg = await streamerChannel.send(f"@everyone {streamer} is live!", embed=embed)
                     twitch["messages"][streamer] = msg.id
-                elif twitch["responses"][streamer] != streamData[0]:
+                elif twitch["responses"][streamer] != streamData:
                     msg = await streamerChannel.fetch_message(twitch["messages"][streamer])
                     await msg.edit(embed=embed)
                 twitch["responses"][streamer] = streamData
@@ -133,8 +166,6 @@ async def background_loop():
                     del twitch["messages"][streamer]
                     u.editConfig("twitch.json", twitch)
                     twitch = u.reloadConfig("twitch.json")
-
-            r.close()
         await sleep(60)
 
 
@@ -269,7 +300,5 @@ async def stop(ctx):
     await bot.logout()
     exit(1)
 
-
-if __name__ == "__main__":
-    bot.loop.create_task(background_loop())
-    bot.run(config["secrets"]["token"])
+bot.loop.create_task(background_loop())
+bot.run(secrets["token"])
