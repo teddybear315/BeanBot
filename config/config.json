@@ -1,6 +1,7 @@
 {
     "bot": {
         "prefix": "b!",
+        "dev_prefix": "b!!",
         "description": "Bean Gang is life"
     },
     "devs": [

@@ -21,16 +21,30 @@ mongo = MongoClient("mongodb://localhost:27017")
 twitch: Collection = mongo["BeanBot"]["Streamers"]
 
 __version__ = config["meta"]["version"]
-__name__    = "Bean Bot"
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
 
-bot = Bot(command_prefix=config["bot"]["prefix"],
+initial_extensions = [
+    'cogs.test'
+]
+
+prefix: str
+
+if "--debug" in argv:
+    prefix = config["bot"]["dev_prefix"]
+else:
+    prefix = config["bot"]["prefix"]
+
+bot = Bot(command_prefix=prefix,
           case_insensitive=True,
           description=config["bot"]["description"],
           owner_ids=config["devs"],
           activity=discord.Activity(
               type=discord.ActivityType.playing, name="games with the Bean Gang.")
           )
+
+if __name__ == '__main__':
+    for extension in initial_extensions:
+        bot.load_extension(extension)
 
 u = Utils(config)
 t = Twitch(config, secrets, twitch, bot)
@@ -49,7 +63,6 @@ streamerChannel     : discord.TextChannel
 suggestionChannel   : discord.TextChannel
 
 newline = "\n\t- "
-
 
 @bot.event
 async def on_ready():
@@ -135,6 +148,10 @@ async def background_loop():
         await t.check(streamerChannel)
         await sleep(60)
 
+@bot.command()
+async def testt(ctx: Context):
+    # bot.load_extension('cogs.test')
+    await ctx.send('Test 2')
 
 @bot.command()
 async def raid(ctx: Context, twitchChannel: str = None):
