@@ -300,4 +300,5 @@ async def stop(ctx):
 
 u.log("Starting script...")
 bot.loop.create_task(background_loop())
-bot.run(secrets["token"])
+if "--debug" in argv: bot.run(secrets["dev_token"])
+else : bot.run(secrets["token"])
