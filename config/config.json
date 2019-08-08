@@ -8,13 +8,10 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.2.0",
+        "version": "1.2.1",
         "changelog": [
-            "Added the b!link command, to improve Twitch integration experience",
-            "\t* Usage: b!link <twitch username>",
-            "Added the b!offline command, to tell BeanBot you stopped streaming if it didnt delete the message",
-            "\t* Usage: b!offline",
-            "Put Twitch integration into its own file"
+            "Added the b!unlink command, to remove your Twitch link",
+            "\t* Usage: b!unlink"
         ]
     }
 }

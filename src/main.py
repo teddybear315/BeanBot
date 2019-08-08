@@ -225,6 +225,29 @@ async def link(ctx, _user: str = None):
     twitch = u.reloadConfig("twitch.json")
     await ctx.send(f"{ctx.author.mention}, you have linked your Twitch account ({_user}) to your profile!\nThis will grant you a better expierience with our Twitch integration.")
 
+@bot.command()
+async def unlink(ctx):
+    u.log(ctx)
+    await ctx.message.delete()
+    global twitch
+    if not u.streamer(ctx.author):
+        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.\nIf you are a streamer please contact a VIP or developer.")
+        await sleep(3)
+        await msg.delete()
+        return
+    if not twitch["discord_links"][str(ctx.author.id)]:
+        msg = await ctx.send(f"{ctx.author.mention}, your accounts are not linked.")
+        await sleep(3)
+        await msg.delete()
+        return
+
+    _user = twitch["discord_links"][str(ctx.author.id)]
+    del twitch["discord_links"][str(ctx.author.id)]
+    del twitch["twitch_links"][_user]
+    u.editConfig("twitch.json", twitch)
+    twitch = u.reloadConfig("twitch.json")
+    await ctx.send(f"{ctx.author.mention}, you have unlinked your Twitch account ({_user})")
+    
 @bot.command(name="dev")
 async def dev(ctx, _user: discord.Member = None):
     u.log(ctx)
