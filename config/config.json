@@ -8,10 +8,13 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.1.1",
+        "version": "1.2.0",
         "changelog": [
-            "Put secrets into their own config file",
-            "Fixed program ignoring new version check"
+            "Added the b!link command, to improve Twitch integration experience",
+            "\t* Usage: b!link <twitch username>",
+            "Added the b!offline command, to tell BeanBot you stopped streaming if it didnt delete the message",
+            "\t* Usage: b!offline",
+            "Put Twitch integration into its own file"
         ]
     }
 }
