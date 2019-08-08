@@ -8,10 +8,12 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.2.1",
+        "version": "1.3.0",
         "changelog": [
-            "Added the b!unlink command, to remove your Twitch link",
-            "\t* Usage: b!unlink"
+            "Added mongodb support for Twitch integration to make things more organized and easy",
+            "Removed the b!unlink command",
+            "Removed the b!link command",
+            "Removed the b!offline command"
         ]
     }
 }

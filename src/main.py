@@ -5,28 +5,32 @@ import requests
 
 from sys import argv
 from asyncio import sleep
-from discord.ext.commands import Bot, Context
 from discord import Embed
+from pymongo import MongoClient
+from pymongo.collection import Collection
+from discord.ext.commands import Bot, Context
 
 # local imports
 from imports.twitch import Twitch
 from imports.utils import Utils, vipId
 
-config      = json.load(open("config/config.json"))
-twitch      = json.load(open("config/twitch.json"))
-secrets     = json.load(open("config/secrets.json"))
+
+config = json.load(open("config/config.json"))
+secrets = json.load(open("config/secrets.json"))
+mongo = MongoClient("mongodb://localhost:27017")
+twitch: Collection = mongo["BeanBot"]["Streamers"]
 
 __version__ = config["meta"]["version"]
 __name__    = "Bean Bot"
-__package__ = "Main"
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
 
 bot = Bot(command_prefix=config["bot"]["prefix"],
           case_insensitive=True,
           description=config["bot"]["description"],
           owner_ids=config["devs"],
-          activity=discord.Activity(type=discord.ActivityType.playing, name="games with the Bean Gang.")
-)
+          activity=discord.Activity(
+              type=discord.ActivityType.playing, name="games with the Bean Gang.")
+          )
 
 u = Utils(config)
 t = Twitch(config, secrets, twitch, bot)
@@ -34,9 +38,9 @@ t = Twitch(config, secrets, twitch, bot)
 guild: discord.Guild
 
 # roles
-vipRole         : discord.Role
-streamerRole    : discord.Role
-beansRole       : discord.Role
+vipRole     : discord.Role
+streamerRole: discord.Role
+beansRole   : discord.Role
 
 # channels
 changelogChannel    : discord.TextChannel
@@ -45,6 +49,7 @@ streamerChannel     : discord.TextChannel
 suggestionChannel   : discord.TextChannel
 
 newline = "\n\t- "
+
 
 @bot.event
 async def on_ready():
@@ -74,7 +79,6 @@ async def on_ready():
     streamerChannel     = bot.get_channel(604088400819126361)
     suggestionChannel   = bot.get_channel(608371806549704800)
 
-
     if __version__ != secrets["CACHED_VERSION"] and "--debug" not in argv:
         await changelogChannel.send(f"""
 ***BeanBot v{__version__} online!***
@@ -102,10 +106,11 @@ async def on_member_remove(user: discord.Member):
     await welcomeChannel.send(f"The bean gang will miss you, {user.display_name}")
     await user.send(f"The bean gang will miss you!", tts=True)
 
+
 @bot.event
 async def on_message(message: discord.Message):
     global suggestionChannel
-    
+
     if message.channel == suggestionChannel:
         embed = discord.Embed(title="New Feature Request!", color=0x8000ff)
         embed.set_author(name=f"{message.author.name}#{message.author.discriminator}",
@@ -113,7 +118,8 @@ async def on_message(message: discord.Message):
         embed.add_field(name="Request", value=message.content, inline=True)
         await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.",
                                   embed=embed)
-        u.log(f"Request from {message.author.name}#{message.author.discriminator} recieved..")
+        u.log(
+            f"Request from {message.author.name}#{message.author.discriminator} recieved..")
         for dev in config["devs"]:
             developer: discord.User = bot.get_user(dev)
             await developer.send(embed=embed)
@@ -131,7 +137,7 @@ async def background_loop():
 
 
 @bot.command()
-async def raid(ctx:Context, twitchChannel:str = None):
+async def raid(ctx: Context, twitchChannel: str = None):
     u.log(ctx)
     await ctx.message.delete()
     if not u.vip(ctx.author):
@@ -146,7 +152,8 @@ async def raid(ctx:Context, twitchChannel:str = None):
         return
     await ctx.send(f"@everyone we're raiding https://twitch.tv/{twitchChannel}")
 
-## SET ANY TYPE OF INTERNAL VARIABLE
+# SET ANY TYPE OF INTERNAL VARIABLE
+
 
 @bot.command(name="vip")
 async def _vip(ctx, _user: discord.Member = None):
@@ -170,6 +177,7 @@ async def _vip(ctx, _user: discord.Member = None):
 
     await _user.add_roles(vipRole)
     await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a VIP!")
+
 
 @bot.command(name="streamer")
 async def streamer(ctx, _user: discord.Member = None, _username: str = None):
@@ -196,19 +204,21 @@ async def streamer(ctx, _user: discord.Member = None, _username: str = None):
         await msg.delete()
         return
 
-    global twitch
     await _user.add_roles(streamerRole)
-    twitch["channels"].append(_username)
-    u.editConfig("twitch.json", twitch)
-    twitch = u.reloadConfig("twitch.json")
+    twitch.insert_one({
+        "twitch_username": _username,
+        "message_id": None,
+        "discord_id": _user.id,
+        "response": {}
+    })
     await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a streamer!")
+
 
 @bot.command()
 async def link(ctx, _user: str = None):
     u.log(ctx)
     await ctx.message.delete()
-    global twitch
-    if not u.streamer(ctx.author) or _user not in twitch["channels"]:
+    if not u.streamer(ctx.author) or {"twitch_username": _user} not in twitch.find():
         msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.\nIf you are a streamer please contact a VIP or developer.")
         await sleep(3)
         await msg.delete()
@@ -219,35 +229,11 @@ async def link(ctx, _user: str = None):
         await msg.delete()
         return
 
-    twitch["twitch_links"][_user] = ctx.author.id
-    twitch["discord_links"][str(ctx.author.id)] = _user 
-    u.editConfig("twitch.json", twitch)
-    twitch = u.reloadConfig("twitch.json")
+    twitch.update_one({"twitch_username": _user}, {"$set":
+                                                   {"discord_id": ctx.author.id}})
     await ctx.send(f"{ctx.author.mention}, you have linked your Twitch account ({_user}) to your profile!\nThis will grant you a better expierience with our Twitch integration.")
 
-@bot.command()
-async def unlink(ctx):
-    u.log(ctx)
-    await ctx.message.delete()
-    global twitch
-    if not u.streamer(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.\nIf you are a streamer please contact a VIP or developer.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not twitch["discord_links"][str(ctx.author.id)]:
-        msg = await ctx.send(f"{ctx.author.mention}, your accounts are not linked.")
-        await sleep(3)
-        await msg.delete()
-        return
 
-    _user = twitch["discord_links"][str(ctx.author.id)]
-    del twitch["discord_links"][str(ctx.author.id)]
-    del twitch["twitch_links"][_user]
-    u.editConfig("twitch.json", twitch)
-    twitch = u.reloadConfig("twitch.json")
-    await ctx.send(f"{ctx.author.mention}, you have unlinked your Twitch account ({_user})")
-    
 @bot.command(name="dev")
 async def dev(ctx, _user: discord.Member = None):
     u.log(ctx)
@@ -274,38 +260,10 @@ async def dev(ctx, _user: discord.Member = None):
     config = u.reloadConfig()
     await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a developer!")
 
-## END SET ANY TYPE OF INTERNAL VARIABLE
-
-# streamer level command
-
-@bot.command()
-async def offline(ctx):
-    u.log(ctx)
-    await ctx.message.delete()
-    global twitch
-    if not u.streamer(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if str(ctx.author.id) not in twitch["discord_links"]:
-        msg = await ctx.send(f"{ctx.author.mention}, please link your Twitch account to your profile through BeanBot using \`b!link\`.")
-        await sleep(3)
-        await msg.delete()
-        return
-
-    for link in twitch["discord_links"]:
-        if int(link) == ctx.author.id:
-            streamer = twitch["discord_links"][link]
-            del twitch["responses"][streamer]
-            msg = await streamerChannel.fetch_message(twitch["messages"][streamer])
-            await msg.delete()
-            del twitch["messages"][streamer]
-    u.updateConfig("twitch.json", twitch)
-    twitch = u.reloadConfig("twitch.json")
-
+# END SET ANY TYPE OF INTERNAL VARIABLE
 
 # dev level commands
+
 
 @bot.command()
 async def reload(ctx):
@@ -323,6 +281,7 @@ async def reload(ctx):
     await sleep(1)
     await msg.delete()
     return
+
 
 @bot.command()
 async def stop(ctx):
