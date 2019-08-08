@@ -24,7 +24,7 @@ __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
 
 initial_extensions = [
-    'cogs.test'
+    'cogs.twitch'
 ]
 
 prefix: str
@@ -66,6 +66,9 @@ newline = "\n\t- "
 
 @bot.event
 async def on_ready():
+    global u
+    global twitch
+
     u.log("Bot ready...")
     u.log("Running version: " + __version__)
 
@@ -147,11 +150,6 @@ async def background_loop():
         u.log("Checking twitch...")
         await t.check(streamerChannel)
         await sleep(60)
-
-@bot.command()
-async def testt(ctx: Context):
-    # bot.load_extension('cogs.test')
-    await ctx.send('Test 2')
 
 @bot.command()
 async def raid(ctx: Context, twitchChannel: str = None):
