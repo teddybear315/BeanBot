@@ -5,9 +5,6 @@ import discord
 from discord.ext.commands import Context
 from termcolor import cprint
 
-vipId = 601711869668884484
-streamerId = 601710639068610578
-
 class Utils:
     """
     Utilities class
@@ -26,13 +23,13 @@ class Utils:
     def vip(self, author: discord.Member):
         """Returns if user is a vip"""
         for role in author.roles:
-            if role.id == vipId: return True
+            if role.id == 601711869668884484: return True
         return False
 
     def streamer(self, user: discord.Member):
         """Returns if a user is a streamer"""
         for role in user.roles:
-            if role.id == streamerId: return True
+            if role.id == 601710639068610578: return True
         return False
 
 

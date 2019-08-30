@@ -6,19 +6,17 @@ import requests
 from sys import argv
 from asyncio import sleep
 from discord import Embed
-from pymongo import MongoClient
-from pymongo.collection import Collection
 from discord.ext.commands import Bot, Context
 
 # local imports
-from imports.twitch import Twitch
-from imports.utils import Utils, vipId
+from imports.twitch_integration import Twitch
+from imports.utils import Utils
+from imports import twitch, u, config, secrets
 
-
-config = json.load(open("config/config.json"))
-secrets = json.load(open("config/secrets.json"))
-mongo = MongoClient("mongodb://localhost:27017")
-twitch: Collection = mongo["BeanBot"]["Streamers"]
+twitch  = twitch()
+config  = config()
+secrets = secrets()
+u       = u()
 
 __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
@@ -27,12 +25,10 @@ initial_extensions = [
     'cogs.twitch'
 ]
 
-prefix: str
-
+prefix = config["bot"]["prefix"]
 if "--debug" in argv:
     prefix = config["bot"]["dev_prefix"]
-else:
-    prefix = config["bot"]["prefix"]
+
 
 bot = Bot(command_prefix=prefix,
           case_insensitive=True,
@@ -42,13 +38,7 @@ bot = Bot(command_prefix=prefix,
               type=discord.ActivityType.playing, name="games with the Bean Gang.")
           )
 
-if __name__ == '__main__':
-    for extension in initial_extensions:
-        bot.load_extension(extension)
-
-u = Utils(config)
 t = Twitch(config, secrets, twitch, bot)
-
 guild: discord.Guild
 
 # roles
@@ -66,9 +56,6 @@ newline = "\n\t- "
 
 @bot.event
 async def on_ready():
-    global u
-    global twitch
-
     u.log("Bot ready...")
     u.log("Running version: " + __version__)
 
@@ -85,7 +72,7 @@ async def on_ready():
     guild = bot.get_guild(601701439995117568)
 
     # roles
-    vipRole         = guild.get_role(vipId)
+    vipRole         = guild.get_role(601711869668884484)
     streamerRole    = guild.get_role(601710639068610578)
     beansRole       = guild.get_role(601711999939903489)
 
@@ -108,6 +95,8 @@ Recent Changes:
         u.log("Either debugging or couldn\'t find cached version", u.WRN)
 
     u.log("BeanBot logged in...")
+    for extension in initial_extensions:
+        bot.load_extension(extension)
 
 
 @bot.event
@@ -192,62 +181,6 @@ async def _vip(ctx, _user: discord.Member = None):
 
     await _user.add_roles(vipRole)
     await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a VIP!")
-
-
-@bot.command(name="streamer")
-async def streamer(ctx, _user: discord.Member = None, _username: str = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.vip(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only VIPs can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not _user:
-        msg = await ctx.send(f"{ctx.author.mention}, please tag a user to make them a streamer.")
-        await sleep(2)
-        await msg.delete()
-        return
-    if not _username:
-        msg = await ctx.send(f"{ctx.author.mention}, please specify the users Twitch username.")
-        await sleep(2)
-        await msg.delete()
-        return
-    if vipRole in _user.roles:
-        msg = await ctx.send(f"{ctx.author.mention}, that user is already a streamer.")
-        await sleep(2)
-        await msg.delete()
-        return
-
-    await _user.add_roles(streamerRole)
-    twitch.insert_one({
-        "twitch_username": _username,
-        "message_id": None,
-        "discord_id": _user.id,
-        "response": {}
-    })
-    await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a streamer!")
-
-
-@bot.command()
-async def link(ctx, _user: str = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.streamer(ctx.author) or {"twitch_username": _user} not in twitch.find():
-        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.\nIf you are a streamer please contact a VIP or developer.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not _user:
-        msg = await ctx.send(f"{ctx.author.mention}, please enter a twitch username.")
-        await sleep(3)
-        await msg.delete()
-        return
-
-    twitch.update_one({"twitch_username": _user}, {"$set":
-                                                   {"discord_id": ctx.author.id}})
-    await ctx.send(f"{ctx.author.mention}, you have linked your Twitch account ({_user}) to your profile!\nThis will grant you a better expierience with our Twitch integration.")
-
 
 @bot.command(name="dev")
 async def dev(ctx, _user: discord.Member = None):

@@ -9,12 +9,10 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.3.0",
+        "version": "1.3.1",
         "changelog": [
-            "Added mongodb support for Twitch integration to make things more organized and easy",
-            "Removed the b!unlink command",
-            "Removed the b!link command",
-            "Removed the b!offline command"
+            "Fixed bug where Discord id's being changed when uploaded to the database.",
+            "Still migrating to cogs..."
         ]
     }
 }
