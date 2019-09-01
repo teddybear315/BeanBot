@@ -7,16 +7,18 @@ from sys import argv
 from asyncio import sleep
 from discord import Embed
 from discord.ext.commands import Bot, Context
+from pymongo.collection import Collection
+
 
 # local imports
 from imports.twitch_integration import Twitch
 from imports.utils import Utils
 from imports import twitch, u, config, secrets
 
-twitch  = twitch()
-config  = config()
-secrets = secrets()
-u       = u()
+twitch: Collection  = twitch()
+config              = config()
+secrets             = secrets()
+u                   = u()
 
 __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
@@ -31,12 +33,12 @@ if "--debug" in argv:
 
 
 bot = Bot(command_prefix=prefix,
-          case_insensitive=True,
-          description=config["bot"]["description"],
-          owner_ids=config["devs"],
-          activity=discord.Activity(
-              type=discord.ActivityType.playing, name="games with the Bean Gang.")
-          )
+        case_insensitive=True,
+        description=config["bot"]["description"],
+        owner_ids=config["devs"],
+        activity=discord.Activity(
+        type=discord.ActivityType.playing, name="games with the Bean Gang.")
+)
 
 t = Twitch(config, secrets, twitch, bot)
 guild: discord.Guild
@@ -99,17 +101,19 @@ Recent Changes:
         bot.load_extension(extension)
 
 
+
 @bot.event
 async def on_member_join(user: discord.Member):
     await user.add_roles(beansRole)
-
     await welcomeChannel.send(f"Welcome to the Bean Gang, {user.mention}")
 
 
 @bot.event
 async def on_member_remove(user: discord.Member):
     await welcomeChannel.send(f"The bean gang will miss you, {user.display_name}")
-    await user.send(f"The bean gang will miss you!", tts=True)
+    await user.send(f"The bean gang will miss you!")
+    if twitch.find({"discord_id": user.id}):
+        twitch.delete_one({"discord_id": user.id})
 
 
 @bot.event
@@ -118,11 +122,9 @@ async def on_message(message: discord.Message):
 
     if message.channel == suggestionChannel:
         embed = discord.Embed(title="New Feature Request!", color=0x8000ff)
-        embed.set_author(name=f"{message.author.name}#{message.author.discriminator}",
-                         icon_url=message.author.avatar_url)
+        embed.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
         embed.add_field(name="Request", value=message.content, inline=True)
-        await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.",
-                                  embed=embed)
+        await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.", embed=embed)
         u.log(
             f"Request from {message.author.name}#{message.author.discriminator} recieved..")
         for dev in config["devs"]:
@@ -249,4 +251,4 @@ async def stop(ctx):
 u.log("Starting script...")
 bot.loop.create_task(background_loop())
 if "--debug" in argv: bot.run(secrets["dev_token"])
-else : bot.run(secrets["token"])
+else: bot.run(secrets["token"])
