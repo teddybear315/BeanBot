@@ -182,6 +182,9 @@ async def custom_link(ctx, url: str = None):
         await msg.delete()
         return
     
+    if not url.startswith("https://") or not url.startswith("http://"):
+        url = "https://" + url
+
     current_user = twitch.find({"discord_id": ctx.author.id})
     current_user["custom_stream_url"] = custom_link
     twitch.update_one({"discord_id": ctx.author.id}, {"$set": current_user})
