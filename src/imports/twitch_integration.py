@@ -46,7 +46,7 @@ class Twitch:
                 gameData = r.json()["data"][0]
                 r.close()
 
-                u.log(int(streamer["discord_id"]))
+                self.u.log(int(streamer["discord_id"]))
                 user: discord.User  = await self.bot.fetch_user(int(streamer["discord_id"]))
                 embed: discord.Embed
                 if (streamer["custom_stream_url"]):
