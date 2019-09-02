@@ -9,9 +9,9 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.3.2",
+        "version": "1.3.3",
         "changelog": [
-            "If streamer leaves it removes them from the database."
+            "Fixed fatal crash"
         ]
     }
 }
