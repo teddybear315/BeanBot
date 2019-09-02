@@ -160,7 +160,7 @@ async def raid(ctx: Context, twitchChannel: str = None):
 
 # SET ANY TYPE OF INTERNAL VARIABLE
 
-@bot.command(name="customlink", alias="link")
+@bot.command(name="link", aliases=["customlink", "customurl"])
 async def custom_link(ctx, url: str = None):
     u.log(ctx)
     await ctx.message.delete()
@@ -184,6 +184,7 @@ async def custom_link(ctx, url: str = None):
     
     current_user = twitch.find({"discord_id": ctx.author.id})
     current_user["custom_stream_url"] = custom_link
+    twitch.update_one({"discord_id": ctx.author.id}, {"$set": current_user})
     await ctx.send(f"{ctx.author.mention}, your custom link has been set!")
 
 @bot.command(name="vip")
