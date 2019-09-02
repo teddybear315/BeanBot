@@ -9,9 +9,10 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.3.3",
+        "version": "1.4.0",
         "changelog": [
-            "Fixed fatal crash"
+            "Added the b!link (b!customlink) to change your stream link from \"twitch.tv/user\" to \"customurl.com\"",
+            "\t* Usage b!link <custom url>"
         ]
     }
 }

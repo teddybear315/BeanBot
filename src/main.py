@@ -160,6 +160,31 @@ async def raid(ctx: Context, twitchChannel: str = None):
 
 # SET ANY TYPE OF INTERNAL VARIABLE
 
+@bot.command(name="customlink", alias="link")
+async def custom_link(ctx, url: str = None):
+    u.log(ctx)
+    await ctx.message.delete()
+    if not u.streamer(ctx.author):
+        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.")
+        await sleep(3)
+        await msg.delete()
+        return
+    if not url:
+        msg = await ctx.send(f"{ctx.author.mention}, please enter your custom stream link.")
+        await sleep(3)
+        await msg.delete()
+        return
+    in_use = twitch.find({"custom_stream_url": link})
+    if in_use:
+        usr = bot.get_user(in_use["discord_id"])
+        msg = await ctx.send(f"{ctx.author.mention}, {usr.name} has already claimed this url.")
+        await sleep(3)
+        await msg.delete()
+        return
+    
+    current_user = twitch.find({"discord_id": ctx.author.id})
+    current_user["custom_stream_url"] = custom_link
+    await ctx.send(f"{ctx.author.mention}, your custom link has been set!")
 
 @bot.command(name="vip")
 async def _vip(ctx, _user: discord.Member = None):

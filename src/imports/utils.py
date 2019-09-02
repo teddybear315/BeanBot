@@ -32,7 +32,6 @@ class Utils:
             if role.id == 601710639068610578: return True
         return False
 
-
     def dev(self, author: discord.Member):
         """Returns if user is a developer"""
         if author.id in self.config["devs"]: return True
