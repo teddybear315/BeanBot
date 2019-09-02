@@ -174,13 +174,6 @@ async def custom_link(ctx, url: str = None):
         await sleep(3)
         await msg.delete()
         return
-    in_use = twitch.find({"custom_stream_url": url})
-    if in_use:
-        usr = bot.get_user(in_use["discord_id"])
-        msg = await ctx.send(f"{ctx.author.mention}, {usr.name} has already claimed this url.")
-        await sleep(3)
-        await msg.delete()
-        return
     
     if not url.startswith("https://") or not url.startswith("http://"):
         url = "https://" + url
