@@ -45,8 +45,9 @@ class TwitchCog(commands.Cog):
         twitch.insert_one({
             "twitch_username": _username,
             "message_id": None,
-            "discord_id": _user.id,
-            "response": {}
+            "discord_id": str(_user.id),
+            "response": {},
+            "custom_stream_url": None
         })
         await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a streamer!")
         
