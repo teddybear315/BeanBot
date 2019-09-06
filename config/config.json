@@ -9,9 +9,9 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.4.1",
+        "version": "1.4.2",
         "changelog": [
-            "Made the link command actually work."
+            "Fixed crash on internet outage"
         ]
     }
 }

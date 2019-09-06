@@ -28,23 +28,35 @@ class Twitch:
     async def check(self, streamerChannel: discord.TextChannel):
         for streamer in self.twitch.find():
             username = streamer["twitch_username"]
-            headers = {"User-Agent": "Your user agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36 OPR/63.0.3368.51 (Edition beta)", "Client-ID": self.secrets["twitchToken"]}
+            headers = {
+                "User-Agent": "Your user agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36 OPR/63.0.3368.51 (Edition beta)",
+                "Client-ID": self.secrets["twitchToken"]
+            }
 
             self.u.log(f"\tChecking if {username} is live...")
-            r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}", headers=headers)
-            streamData = r.json()
-            r.close()
-            
+            try:
+                r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}", headers=headers, verify=False)
+                streamData = r.json()
+                r.close()
+            except requests.ConnectionError as e:
+                self.u.log("You\'re not connected to the Internet:tm:... Aborting", self.u.ERR)
+                self.twitch.update_one({"twitch_username": username}, {"$set": streamer})
+                return
 
             if streamData["data"]:
-                streamData = r.json()["data"][0]
-                r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers)
-                userData = r.json()["data"][0]
-                r.close()
+                try:
+                    streamData = r.json()["data"][0]
+                    r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers, verify=False)
+                    userData = r.json()["data"][0]
+                    r.close()
 
-                r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers)
-                gameData = r.json()["data"][0]
-                r.close()
+                    r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers, verify=False)
+                    gameData = r.json()["data"][0]
+                    r.close()
+                except requests.ConnectionError as e:
+                    self.u.log("You\'re not connected to the Internet:tm:... Aborting", self.u.ERR)
+                    self.twitch.update_one({"twitch_username": username}, {"$set": streamer})
+                    return
 
                 self.u.log(int(streamer["discord_id"]))
                 user: discord.User  = await self.bot.fetch_user(int(streamer["discord_id"]))
