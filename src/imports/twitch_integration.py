@@ -58,7 +58,6 @@ class Twitch:
                     self.twitch.update_one({"twitch_username": username}, {"$set": streamer})
                     return
 
-                self.u.log(int(streamer["discord_id"]))
                 user: discord.User  = await self.bot.fetch_user(int(streamer["discord_id"]))
                 embed: discord.Embed
                 if (streamer["custom_stream_url"]):

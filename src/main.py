@@ -84,15 +84,24 @@ async def on_ready():
     streamerChannel     = bot.get_channel(604088400819126361)
     suggestionChannel   = bot.get_channel(608371806549704800)
 
+    embed = discord.Embed(title=f"BeanBot v{__version__}", color=0xff6000)
+    embed.set_author(name=f"BeanBot Devs", icon_url=bot.user.avatar_url)
+    embed.add_field(name="Changelog", value=f"\t- {newline.join(config['meta']['changelog'])}")
+    embed.set_footer(text=f"Build #{config['meta']['build_number']}")
 
     if __version__ != secrets["CACHED_VERSION"] and "--debug" not in argv:
-        await changelogChannel.send(f"""
-***BeanBot v{__version__} online!***
-Recent Changes:
-\t- {newline.join(config['meta']['changelog'])}""")
         secrets["CACHED_VERSION"] = __version__
+        secrets["CACHED_BUILD"] = config["meta"]["build_number"]
         u.editConfig("secrets.json", secrets)
         secrets = u.reloadConfig("secrets.json")
+        
+        msg = await changelogChannel.send(embed=embed)
+        config["meta"]["changelog_message_id"] = msg.id
+
+    elif config["meta"]["build_number"] != secrets["CACHED_BUILD"]:
+        msg = await changelogChannel.fetch_message(config["meta"]["changelog_message_id"])
+        await msg.edit(embed=embed)
+    
     elif "--debug" in argv:
         u.log("Debugging", u.WRN)
 

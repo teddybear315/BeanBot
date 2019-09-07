@@ -9,12 +9,12 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.4.3",
+        "version": "1.5.0",
         "build_number": 1,
         "changelog": [
-            "Fixed $streamer command.",
-            "Changed how the bot responds to commands.",
-            "Did a little of code of organization and clean up."
-        ]
+            "This message was changed as you can see.",
+            "Added build number tracking."
+        ],
+        "changelog_message_id": 619714194379505715
     }
 }
