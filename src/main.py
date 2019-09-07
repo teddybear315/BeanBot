@@ -96,10 +96,10 @@ async def on_ready():
         secrets = u.reloadConfig("secrets.json")
         
         msg = await changelogChannel.send(embed=embed)
-        config["meta"]["changelog_message_id"] = msg.id
+        secrets["CHANGELOG_MESSAGE_ID"] = msg.id
 
     elif config["meta"]["build_number"] != secrets["CACHED_BUILD"]:
-        msg = await changelogChannel.fetch_message(config["meta"]["changelog_message_id"])
+        msg = await changelogChannel.fetch_message(secrets["CHANGELOG_MESSAGE_ID"])
         await msg.edit(embed=embed)
     
     elif "--debug" in argv:

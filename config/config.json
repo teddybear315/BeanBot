@@ -10,11 +10,10 @@
     ],
     "meta": {
         "version": "1.5.0",
-        "build_number": 1,
+        "build_number": 3,
         "changelog": [
             "This message was changed as you can see.",
             "Added build number tracking."
-        ],
-        "changelog_message_id": 619714194379505715
+        ]
     }
 }
