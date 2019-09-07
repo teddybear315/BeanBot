@@ -35,7 +35,7 @@ class Twitch:
 
             self.u.log(f"\tChecking if {username} is live...")
             try:
-                r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}", headers=headers, verify=False)
+                r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}", headers=headers)
                 streamData = r.json()
                 r.close()
             except requests.ConnectionError as e:
@@ -46,11 +46,11 @@ class Twitch:
             if streamData["data"]:
                 try:
                     streamData = r.json()["data"][0]
-                    r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers, verify=False)
+                    r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers)
                     userData = r.json()["data"][0]
                     r.close()
 
-                    r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers, verify=False)
+                    r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers)
                     gameData = r.json()["data"][0]
                     r.close()
                 except requests.ConnectionError as e:
