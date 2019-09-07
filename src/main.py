@@ -107,8 +107,7 @@ async def on_ready():
 
     u.log("BeanBot logged in...")
     for extension in initial_extensions:
-        if extension not in bot.extensions:
-            bot.load_extension(extension)
+        bot.load_extension(extension)
 
 
 @bot.event
@@ -119,7 +118,7 @@ async def on_member_join(user: discord.Member):
 
 @bot.event
 async def on_member_remove(user: discord.Member):
-    await welcomeChannel.send(f"The bean gang will miss you, {user.display_name}")
+    await welcomeChannel.send(f"The bean gang will miss you, {user.name}")
     await user.send(f"The bean gang will miss you!")
     if twitch.find({"discord_id": str(user.id)}):
         twitch.delete_one({"discord_id": str(user.id)})
