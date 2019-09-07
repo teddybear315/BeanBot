@@ -45,13 +45,25 @@ class Twitch:
 
             if streamData["data"]:
                 try:
-                    streamData = r.json()["data"][0]
+                    try:
+                        streamData = r.json()["data"][0]
+                    except:
+                        streamData = r.json()["data"]
+                        continue
                     r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers)
-                    userData = r.json()["data"][0]
+                    try:
+                        userData = r.json()["data"][0]
+                    except:
+                        userData = r.json()["data"]
+                        continue
                     r.close()
 
                     r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers)
-                    gameData = r.json()["data"][0]
+                    try:
+                        gameData = r.json()["data"][0]
+                    except:
+                        gameData = r.json()["data"]
+                        continue
                     r.close()
                 except requests.ConnectionError as e:
                     self.u.log("You\'re not connected to the Internet:tm:... Aborting", self.u.ERR)
