@@ -12,7 +12,6 @@ from pymongo.collection import Collection
 
 # local imports
 from imports.twitch_integration import Twitch
-from imports.utils import Utils
 from imports import twitch, u, config, secrets
 
 twitch: Collection  = twitch()
@@ -24,7 +23,8 @@ __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
 
 initial_extensions = [
-    'cogs.twitch'
+    'cogs.twitch',
+    'cogs.utilities'
 ]
 
 prefix = config["bot"]["prefix"]
@@ -84,22 +84,22 @@ async def on_ready():
     streamerChannel     = bot.get_channel(604088400819126361)
     suggestionChannel   = bot.get_channel(608371806549704800)
 
+
     if __version__ != secrets["CACHED_VERSION"] and "--debug" not in argv:
         await changelogChannel.send(f"""
 ***BeanBot v{__version__} online!***
 Recent Changes:
-\t- {newline.join(config['meta']['changelog'])}
-        """)
+\t- {newline.join(config['meta']['changelog'])}""")
         secrets["CACHED_VERSION"] = __version__
         u.editConfig("secrets.json", secrets)
         secrets = u.reloadConfig("secrets.json")
-    else:
-        u.log("Either debugging or couldn\'t find cached version", u.WRN)
+    elif "--debug" in argv:
+        u.log("Debugging", u.WRN)
 
     u.log("BeanBot logged in...")
     for extension in initial_extensions:
-        bot.load_extension(extension)
-
+        if extension not in bot.extensions:
+            bot.load_extension(extension)
 
 
 @bot.event
@@ -112,8 +112,8 @@ async def on_member_join(user: discord.Member):
 async def on_member_remove(user: discord.Member):
     await welcomeChannel.send(f"The bean gang will miss you, {user.display_name}")
     await user.send(f"The bean gang will miss you!")
-    if twitch.find({"discord_id": user.id}):
-        twitch.delete_one({"discord_id": user.id})
+    if twitch.find({"discord_id": str(user.id)}):
+        twitch.delete_one({"discord_id": str(user.id)})
 
 
 @bot.event
@@ -124,9 +124,10 @@ async def on_message(message: discord.Message):
         embed = discord.Embed(title="New Feature Request!", color=0x8000ff)
         embed.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
         embed.add_field(name="Request", value=message.content, inline=True)
-        await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.", embed=embed)
-        u.log(
-            f"Request from {message.author.name}#{message.author.discriminator} recieved..")
+        if message.author.id not in config["devs"]:
+            await message.author.send("Your request has been sent to the developers. They will respond as soon as possible. The embed below is what they have recieved.", embed=embed)
+        u.log(f"Request from {message.author.name}#{message.author.discriminator} recieved...")
+
         for dev in config["devs"]:
             developer: discord.User = bot.get_user(dev)
             await developer.send(embed=embed)
@@ -142,133 +143,30 @@ async def background_loop():
         await t.check(streamerChannel)
         await sleep(60)
 
-@bot.command()
-async def raid(ctx: Context, twitchChannel: str = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.vip(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only VIPs can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not twitchChannel:
-        msg = await ctx.send(f"{ctx.author.mention}, please specify a channel name.")
-        await sleep(2)
-        await msg.delete()
-        return
-    await ctx.send(f"@everyone we're raiding https://twitch.tv/{twitchChannel}")
-
-# SET ANY TYPE OF INTERNAL VARIABLE
-
-@bot.command(name="link")
-async def custom_link(ctx, url: str = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.streamer(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only streamers can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not url:
-        msg = await ctx.send(f"{ctx.author.mention}, please enter your custom stream link.")
-        await sleep(3)
-        await msg.delete()
-        return
-    
-    if not url.startswith("https://") or not url.startswith("http://"):
-        url = "https://" + url
-
-    current_user = twitch.find_one({"discord_id": str(ctx.author.id)})
-    current_user["custom_stream_url"] = custom_link
-    param = {"discord_id": str(ctx.author.id)}
-    param2= {"$set": current_user}
-    twitch.update_one(param, param2)
-    await ctx.send(f"{ctx.author.mention}, your custom link has been set!")
-
-@bot.command(name="vip")
-async def _vip(ctx, _user: discord.Member = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.vip(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only VIPs can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not _user:
-        msg = await ctx.send(f"{ctx.author.mention}, please tag a user to make them a VIP.")
-        await sleep(2)
-        await msg.delete()
-        return
-    if vipRole in _user.roles:
-        msg = await ctx.send(f"{ctx.author.mention}, that user is already a VIP.")
-        await sleep(2)
-        await msg.delete()
-        return
-
-    await _user.add_roles(vipRole)
-    await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a VIP!")
-
-@bot.command(name="dev")
-async def dev(ctx, _user: discord.Member = None):
-    u.log(ctx)
-    await ctx.message.delete()
-    if not u.dev(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
-        await sleep(3)
-        await msg.delete()
-        return
-    if not _user:
-        msg = await ctx.send(f"{ctx.author.mention}, please tag a user to make them a developer.")
-        await sleep(2)
-        await msg.delete()
-        return
-    global config
-    if _user.id in config["devs"]:
-        msg = await ctx.send(f"{ctx.author.mention}, that user is already a developer.")
-        await sleep(2)
-        await msg.delete()
-        return
-
-    config["devs"].append(_user.id)
-    u.updateConfig("config.json", config)
-    config = u.reloadConfig()
-    await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a developer!")
-
-# END SET ANY TYPE OF INTERNAL VARIABLE
-
 # dev level commands
-
 
 @bot.command()
 async def reload(ctx):
     u.log(ctx)
-    await ctx.message.delete()
+
     if not u.dev(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
-        await sleep(3)
-        await msg.delete()
+        await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
         return
 
     global config
     config = u.reloadConfig()
-    msg = await ctx.send(f"{ctx.author.mention}, reloaded config!")
-    await sleep(1)
-    await msg.delete()
+    await ctx.send(f"{ctx.author.mention}, reloaded config!")
     return
 
 
 @bot.command()
 async def stop(ctx):
-    await ctx.message.delete()
     if not u.dev(ctx.author):
-        msg = await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
-        await sleep(3)
-        await msg.delete()
+        await ctx.send(f"{ctx.author.mention}, only developers can use this command.")
         return
+
     u.log("Developer initiated logout...", u.ERR)
-    msg = await ctx.send(f"Goodbye...")
-    await sleep(1)
-    await msg.delete()
+    await ctx.send(f"Goodbye...")
     await bot.logout()
     exit(1)
 

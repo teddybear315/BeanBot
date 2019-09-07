@@ -9,9 +9,12 @@
         189850839660101632
     ],
     "meta": {
-        "version": "1.4.2",
+        "version": "1.4.3",
+        "build_number": 1,
         "changelog": [
-            "Fixed crash on internet outage"
+            "Fixed $streamer command.",
+            "Changed how the bot responds to commands.",
+            "Did a little of code of organization and clean up."
         ]
     }
 }

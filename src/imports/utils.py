@@ -6,10 +6,7 @@ from discord.ext.commands import Context
 from termcolor import cprint
 
 class Utils:
-    """
-    Utilities class
-    """
-    config:dict = {}
+    """Utilities class"""
     CMD = 1
     WRN = 2
     ERR = 3
