@@ -84,8 +84,8 @@ class Twitch:
             else:
                 if streamer["message_id"]:
                     self.u.log(f"\t\t{username} is no longer live, deleting message...")
-                    await streamerChannel.fetch_message(streamer["message_id"])
-                    
+                    msg = await streamerChannel.fetch_message(streamer["message_id"])
+                    await msg.delete()
                     streamer["response"] = {}
                     streamer["message_id"] = None
 
