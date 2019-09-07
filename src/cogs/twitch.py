@@ -1,6 +1,7 @@
 import discord
 
 from discord.ext import commands
+from discord.ext.commands import Context
 
 from imports.utils import Utils
 from imports.twitch_integration import Twitch
@@ -11,7 +12,9 @@ u       = u()
 
 class TwitchCog(commands.Cog):
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: commands.Bot              = bot
+        self.guild: discord.Guild           = self.bot.get_guild(601701439995117568)
+        self.streamerRole: discord.Role     = self.guild.get_role(601710639068610578)
         
 
     @commands.command(name="streamer")

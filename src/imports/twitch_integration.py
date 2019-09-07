@@ -73,11 +73,11 @@ class Twitch:
 
                 if not streamer["message_id"]:
                     self.u.log(f"\t\t{username} is now live, announcing stream...")
-                    await streamerChannel.send(f"@everyone {user.mention} is live!", embed=embed)
+                    msg = await streamerChannel.send(f"@everyone {user.mention} is live!", embed=embed)
                     streamer["message_id"] = msg.id
                 elif streamer["response"] != streamData:
                     self.u.log(f"\t\tUpdating {username}\'s live message...")
-                    await streamerChannel.fetch_message(streamer["message_id"])
+                    msg = await streamerChannel.fetch_message(streamer["message_id"])
                     await msg.edit(content=f"@everyone {user.mention} is live!", embed=embed)
                 streamer["response"] = streamData
 

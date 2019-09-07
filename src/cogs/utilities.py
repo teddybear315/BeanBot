@@ -11,7 +11,7 @@ class UtilitiesCog(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot      = bot
         self.guild: discord.Guild   = self.bot.get_guild(601701439995117568)
-        self.vipRole: discord.Role   = self.guild.get_role(601711869668884484)
+        self.vipRole: discord.Role  = self.guild.get_role(601711869668884484)
 
     @commands.command(name="vip")
     async def _vip(self, ctx, _user: discord.Member = None):

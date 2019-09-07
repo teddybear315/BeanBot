@@ -6,7 +6,7 @@ import requests
 from sys import argv
 from asyncio import sleep
 from discord import Embed
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot
 from pymongo.collection import Collection
 
 
