@@ -2,12 +2,10 @@ import discord
 
 from discord.ext import commands
 
-from imports import u, config
+from src.modules import utils as u
 
-config  = config()
-u       = u()
 
-class UtilitiesCog(commands.Cog):
+class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot      = bot
         self.guild: discord.Guild   = self.bot.get_guild(601701439995117568)
@@ -50,4 +48,4 @@ class UtilitiesCog(commands.Cog):
         await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a developer!")
 
 def setup(bot):
-    bot.add_cog(UtilitiesCog(bot))
+    bot.add_cog(Utilities(bot))

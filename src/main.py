@@ -1,23 +1,13 @@
-import time
-import json
 import discord
-import requests
 
 from sys import argv
 from asyncio import sleep
-from discord import Embed
 from discord.ext.commands import Bot
-from pymongo.collection import Collection
 
-
-# local imports
-from imports.twitch_integration import Twitch
-from imports import twitch, u, config, secrets
-
-twitch: Collection  = twitch()
-config              = config()
-secrets             = secrets()
-u                   = u()
+# local modules
+from src.modules import utils as u
+from src.modules.twitch_integration import Twitch
+from src.modules import twitch_db, config, secrets
 
 __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
@@ -40,7 +30,7 @@ bot = Bot(command_prefix=prefix,
         type=discord.ActivityType.playing, name="games with the Bean Gang.")
 )
 
-t = Twitch(config, secrets, twitch, bot)
+t = Twitch(config, secrets, twitch_db, bot)
 guild: discord.Guild
 
 # roles
@@ -100,7 +90,8 @@ async def on_ready():
 
     elif config["meta"]["build_number"] != secrets["CACHED_BUILD"]:
         msg = await changelogChannel.fetch_message(secrets["CHANGELOG_MESSAGE_ID"])
-        await msg.edit(embed=embed)
+        if msg.author != bot.user: u.log(f"Can\'t update build number... Not my message.")
+        else: await msg.edit(embed=embed)
     
     elif "--debug" in argv:
         u.log("Debugging", u.WRN)
@@ -108,6 +99,7 @@ async def on_ready():
     u.log("BeanBot logged in...")
     for extension in initial_extensions:
         bot.load_extension(extension)
+        u.log(f"Loaded {extension}")
 
 
 @bot.event
@@ -120,8 +112,8 @@ async def on_member_join(user: discord.Member):
 async def on_member_remove(user: discord.Member):
     await welcomeChannel.send(f"The bean gang will miss you, {user.name}")
     await user.send(f"The bean gang will miss you!")
-    if twitch.find({"discord_id": str(user.id)}):
-        twitch.delete_one({"discord_id": str(user.id)})
+    if twitch_db.find({"discord_id": str(user.id)}):
+        twitch_db.delete_one({"discord_id": str(user.id)})
 
 
 @bot.event

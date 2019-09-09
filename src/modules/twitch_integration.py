@@ -1,28 +1,25 @@
 import time
 import discord
 import requests
+import discord.ext.commands
 
-from imports.utils import Utils
+from src.modules import utils as u
 from pymongo.collection import Collection
 
 
 class Twitch:
-    """
-    Twitch integration stuff
-    """
+    """Twitch integration stuff"""
 
     config  : dict
     secrets : dict
     twitch  : Collection
-    u       : Utils
     bot     : discord.Client
 
-    def __init__(self, config: dict, secrets: dict, twitch: Collection, bot: discord.Client):
+    def __init__(self, config: dict, secrets: dict, twitch: Collection, bot: discord.ext.commands.Bot):
         """Twitch(config, secrets, twitch)"""
         self.config = config
         self.secrets = secrets
         self.twitch = twitch
-        self.u = Utils(config)
         self.bot = bot
 
     async def check(self, streamerChannel: discord.TextChannel):
@@ -33,40 +30,38 @@ class Twitch:
                 "Client-ID": self.secrets["twitchToken"]
             }
 
-            self.u.log(f"\tChecking if {username} is live...")
+            u.log(f"\tChecking if {username} is live...")
             try:
                 r = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}", headers=headers)
                 streamData = r.json()
                 r.close()
             except requests.ConnectionError as e:
-                self.u.log("You\'re not connected to the Internet:tm:... Aborting", self.u.ERR)
+                u.log("You\'re not connected to the Internet:tm:... Aborting", u.ERR)
                 self.twitch.update_one({"twitch_username": username}, {"$set": streamer})
                 return
 
             if streamData["data"]:
                 try:
-                    try:
-                        streamData = r.json()["data"][0]
+                    try: streamData = r.json()["data"][0]
                     except:
                         streamData = r.json()["data"]
                         continue
                     r = requests.get(f"https://api.twitch.tv/helix/users?id={streamData['user_id']}", headers=headers)
-                    try:
-                        userData = r.json()["data"][0]
+                    try: userData = r.json()["data"][0]
                     except:
                         userData = r.json()["data"]
                         continue
                     r.close()
 
                     r = requests.get(f"https://api.twitch.tv/helix/games?id={streamData['game_id']}", headers=headers)
-                    try:
-                        gameData = r.json()["data"][0]
+                    try: gameData = r.json()["data"][0]
                     except:
                         gameData = r.json()["data"]
                         continue
                     r.close()
+
                 except requests.ConnectionError as e:
-                    self.u.log("You\'re not connected to the Internet:tm:... Aborting", self.u.ERR)
+                    u.log("You\'re not connected to the Internet:tm:... Aborting", u.ERR)
                     self.twitch.update_one({"twitch_username": username}, {"$set": streamer})
                     return
 
@@ -84,18 +79,21 @@ class Twitch:
                 embed.add_field(name="Viewers", value=streamData["viewer_count"], inline=True)
 
                 if not streamer["message_id"]:
-                    self.u.log(f"\t\t{username} is now live, announcing stream...")
+                    u.log(f"\t\t{username} is now live, announcing stream...")
                     msg = await streamerChannel.send(f"@everyone {user.mention} is live!", embed=embed)
                     streamer["message_id"] = msg.id
                 elif streamer["response"] != streamData:
-                    self.u.log(f"\t\tUpdating {username}\'s live message...")
                     msg = await streamerChannel.fetch_message(streamer["message_id"])
+                    if msg.author != self.bot.user:
+                        u.log(f"\t\tCan\'t update {username}\'s live message... Not my message.")
+                        return
+                    u.log(f"\t\tUpdating {username}\'s live message...")
                     await msg.edit(content=f"@everyone {user.mention} is live!", embed=embed)
                 streamer["response"] = streamData
 
             else:
                 if streamer["message_id"]:
-                    self.u.log(f"\t\t{username} is no longer live, deleting message...")
+                    u.log(f"\t\t{username} is no longer live, deleting message...")
                     msg = await streamerChannel.fetch_message(streamer["message_id"])
                     await msg.delete()
                     streamer["response"] = {}
