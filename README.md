@@ -4,8 +4,6 @@ This repository is where we develop the official discord bot for the [Bean Gang]
 
 ## Project
 
-### Issues And Support
-
 ### Contributing
 
 ### Environment Setup
