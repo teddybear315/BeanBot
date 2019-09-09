@@ -2,7 +2,7 @@ import time
 import discord
 import requests
 
-from imports.utils import Utils
+from modules.utils import Utils
 from pymongo.collection import Collection
 
 

@@ -9,10 +9,9 @@ from discord import Embed
 from discord.ext.commands import Bot
 from pymongo.collection import Collection
 
-
-# local imports
-from imports.twitch_integration import Twitch
-from imports import twitch, u, config, secrets
+# local modules
+from modules.twitch_integration import Twitch
+from modules import twitch, u, config, secrets
 
 twitch: Collection  = twitch()
 config              = config()
@@ -94,14 +93,14 @@ async def on_ready():
         secrets["CACHED_BUILD"] = config["meta"]["build_number"]
         u.editConfig("secrets.json", secrets)
         secrets = u.reloadConfig("secrets.json")
-        
+
         msg = await changelogChannel.send(embed=embed)
         secrets["CHANGELOG_MESSAGE_ID"] = msg.id
 
     elif config["meta"]["build_number"] != secrets["CACHED_BUILD"]:
         msg = await changelogChannel.fetch_message(secrets["CHANGELOG_MESSAGE_ID"])
         await msg.edit(embed=embed)
-    
+
     elif "--debug" in argv:
         u.log("Debugging", u.WRN)
 

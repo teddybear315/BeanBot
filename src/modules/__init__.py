@@ -3,7 +3,7 @@ import json
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from imports.utils import Utils
+from modules.utils import Utils
 
 mongo = MongoClient("mongodb://localhost:27017")
 beanbot_db = mongo.get_database("BeanBot")

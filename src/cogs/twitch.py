@@ -3,9 +3,9 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from imports.utils import Utils
-from imports.twitch_integration import Twitch
-from imports import u, twitch
+from modules.utils import Utils
+from modules.twitch_integration import Twitch
+from modules import u, twitch
 
 twitch  = twitch()
 u       = u()
@@ -15,7 +15,7 @@ class TwitchCog(commands.Cog):
         self.bot: commands.Bot              = bot
         self.guild: discord.Guild           = self.bot.get_guild(601701439995117568)
         self.streamerRole: discord.Role     = self.guild.get_role(601710639068610578)
-        
+
 
     @commands.command(name="streamer")
     async def streamer(self, ctx, _user: discord.Member = None, _username: str = None):
@@ -32,7 +32,7 @@ class TwitchCog(commands.Cog):
         if u.streamer(_user) or twitch.find_one({"discord_id": str(_user.id)}):
             await ctx.send(f"{ctx.author.mention}, that user is already a streamer.")
             return
-    
+
         await _user.add_roles(self.streamerRole)
         twitch.insert_one({
             "twitch_username": _username,
@@ -42,7 +42,7 @@ class TwitchCog(commands.Cog):
             "custom_stream_url": None
         })
         await ctx.send(f"{_user.mention}, {ctx.author.mention} has made you a streamer!")
-        
+
 
     @commands.command()
     async def raid(self, ctx: Context, twitchChannel: str = None):
@@ -64,7 +64,7 @@ class TwitchCog(commands.Cog):
         if not url:
             await ctx.send(f"{ctx.author.mention}, please enter your custom stream link.")
             return
-        
+
         if not url.startswith("https://") or not url.startswith("http://"):
             url = "https://" + url
 
