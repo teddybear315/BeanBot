@@ -3,9 +3,9 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from modules.utils import Utils
-from modules.twitch_integration import Twitch
-from modules import u, twitch
+from src.modules.utils import Utils
+from src.modules.twitch_integration import Twitch
+from src.modules import u, twitch
 
 twitch  = twitch()
 u       = u()

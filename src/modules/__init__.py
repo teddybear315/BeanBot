@@ -3,25 +3,21 @@ import json
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from modules.utils import Utils
+from src.modules.utils import utils
 
 mongo = MongoClient("mongodb://localhost:27017")
-beanbot_db = mongo.get_database("BeanBot")
-twitch_db: Collection = beanbot_db.get_collection("Streamers")
 
 cfg = json.load(open("config/config.json"))
-scrts = json.load(open("config/secrets.json"))
-
-utils = Utils(cfg)
+utils = utils(cfg)
 
 def twitch():
-    return twitch_db
+    return mongo.get_database("BeanBot").get_collection("Streamers")
 
 def u():
     return utils
 
 def config():
-    return cfg
+    return json.load(open("config/config.json"))
 
 def secrets():
-    return scrts
+    return json.load(open("config/secrets.json"))

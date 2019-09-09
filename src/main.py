@@ -10,8 +10,8 @@ from discord.ext.commands import Bot
 from pymongo.collection import Collection
 
 # local modules
-from modules.twitch_integration import Twitch
-from modules import twitch, u, config, secrets
+from src.modules.twitch_integration import Twitch
+from src.modules import twitch, u, config, secrets
 
 twitch: Collection  = twitch()
 config              = config()

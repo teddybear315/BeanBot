@@ -2,9 +2,8 @@ import time
 import discord
 import requests
 
-from modules.utils import Utils
+from src.modules.utils import Utils
 from pymongo.collection import Collection
-
 
 class Twitch:
     """

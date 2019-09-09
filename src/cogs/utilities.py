@@ -2,7 +2,7 @@ import discord
 
 from discord.ext import commands
 
-from modules import u, config
+from src.modules import u, config
 
 config  = config()
 u       = u()
