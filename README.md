@@ -1,6 +1,6 @@
 # BeanBot
 
-This repostiry is where we develop the official discord bot for the [Bean Gang](https://discord.gg/UPASQGM) discord server.
+This repository is where we develop the official discord bot for the [Bean Gang](https://discord.gg/UPASQGM) discord server.
 
 ## Project
 
