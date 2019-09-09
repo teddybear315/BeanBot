@@ -3,8 +3,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from src.modules import utils as u
-from src.modules import twitch_db
+from modules import utils as u
+from modules import twitch_db
 
 
 class Twitch(commands.Cog):

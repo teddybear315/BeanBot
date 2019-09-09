@@ -2,7 +2,7 @@ import discord
 
 from discord.ext import commands
 
-from src.modules import utils as u
+from modules import utils as u
 
 
 class Utilities(commands.Cog):

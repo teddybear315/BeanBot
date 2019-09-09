@@ -3,7 +3,7 @@ import discord
 import requests
 import discord.ext.commands
 
-from src.modules import utils as u
+from modules import utils as u
 from pymongo.collection import Collection
 
 

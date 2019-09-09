@@ -5,9 +5,9 @@ from asyncio import sleep
 from discord.ext.commands import Bot
 
 # local modules
-from src.modules import utils as u
-from src.modules.twitch_integration import Twitch
-from src.modules import twitch_db, config, secrets
+from modules import utils as u
+from modules.twitch_integration import Twitch
+from modules import twitch_db, config, secrets
 
 __version__ = config["meta"]["version"]
 __authors__ = ["Yung Granny#7728", "Luke#1000"]
